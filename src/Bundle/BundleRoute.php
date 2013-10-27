@@ -29,6 +29,10 @@ class BundleRoute {
 	private $slim;
 	private $container;
 
+	public function cacheSet ($cache) {
+		$this->cache = $cache;
+	}
+
 	public function __construct ($slim, $container) {
 		$this->slim = $slim;
 		$this->container = $container;
@@ -63,7 +67,7 @@ class BundleRoute {
 			}
 			require $className;
 			$instanceName = $bundle . '\Application';
-			$bundleInstance = new $instanceName($this->slim, $this->container);
+			$bundleInstance = new $instanceName($this->container);
 			$bundleInstance->app();
 		}
 	}
@@ -79,6 +83,7 @@ class BundleRoute {
 		}
 		$json = json_encode($cache, JSON_PRETTY_PRINT);
 		file_put_contents($root . '/../bundles/cache.json', $json);
+		return $json;
 	}
 
 	private function assetSymlinks ($root, $bundleName) {
