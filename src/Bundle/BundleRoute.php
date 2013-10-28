@@ -28,14 +28,16 @@ class BundleRoute {
 	public $cache = false;
 	private $slim;
 	private $container;
+	private $formRoute;
 
 	public function cacheSet ($cache) {
 		$this->cache = $cache;
 	}
 
-	public function __construct ($slim, $container) {
-		$this->slim = $slim;
+	public function __construct ($container) {
 		$this->container = $container;
+		$this->slim = $container->slim;
+		$this->formRoute = $container->formRoute;
 	}
 
 	public function app ($root) {
@@ -61,6 +63,8 @@ class BundleRoute {
 			if ($uriBase != $bundle) {
 				continue;
 			}
+			$this->formRoute->json($bundle);
+			$this->formRoute->app($root);
 			$className = $root . '/../bundles/' . $bundle . '/Application.php';
 			if (!file_exists($className)) {
 				continue;
@@ -80,6 +84,10 @@ class BundleRoute {
 			$bundleName = array_pop($tmp);
 			$cache[] = $bundleName;
 			$this->assetSymlinks($root, $bundleName);
+			$bundleRoot = $bundle . '/public';
+			if (file_exists($bundleRoot . '/../forms')) {
+				$this->formRoute->build($bundleRoot, '%dataAPI%', $bundleName);
+			}
 		}
 		$json = json_encode($cache, JSON_PRETTY_PRINT);
 		file_put_contents($root . '/../bundles/cache.json', $json);
@@ -90,7 +98,15 @@ class BundleRoute {
 		foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
 			$target = $root . '/../bundles/' . $bundleName . '/public/' . $dir;
 			if (!file_exists($target)) {
-				continue;
+				mkdir($target);
+			}
+			if ($dir == 'layouts' || $dir == 'partials') {
+				foreach (['collections', 'documents', 'forms'] as $sub) {
+					$targetSub = $target . '/' . $sub;
+					if (!file_exists($targetSub)) {
+						mkdir ($targetSub);
+					}
+				}
 			}
 			$linkDir = $root . '/' . $dir . '/' . $bundleName;
 			if (!file_exists($linkDir)) {
