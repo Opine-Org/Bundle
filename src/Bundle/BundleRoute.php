@@ -60,11 +60,12 @@ class BundleRoute {
 		}
 		
 		foreach ($bundles as $bundle) {
+			$bundleRoot = $root . '/../bundles/' . $bundle . '/public';
 			if ($uriBase != $bundle) {
 				continue;
 			}
 			$this->formRoute->json($bundle);
-			$this->formRoute->app($root);
+			$this->formRoute->app($bundleRoot, $bundle);
 			$className = $root . '/../bundles/' . $bundle . '/Application.php';
 			if (!file_exists($className)) {
 				continue;
