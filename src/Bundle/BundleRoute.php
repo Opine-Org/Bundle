@@ -72,7 +72,7 @@ class BundleRoute {
 			}
 			require $className;
 			$instanceName = $bundle . '\Application';
-			$bundleInstance = new $instanceName($this->container);
+			$bundleInstance = new $instanceName($this->container, $root, $bundleRoot);
 			$bundleInstance->app();
 		}
 	}
@@ -89,6 +89,17 @@ class BundleRoute {
 			if (file_exists($bundleRoot . '/../forms')) {
 				$this->formRoute->build($bundleRoot, '%dataAPI%', $bundleName);
 			}
+			$bundleApplication = $bundleRoot . '/../Application.php';
+			if (!file_exists($bundleApplication)) {
+				continue;
+			}
+			require_once($bundleApplication);
+			$bundleClass = $bundleName . '\Application'; 
+			$bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
+			if (!method_exists($bundleInstance, 'build')) {
+				continue;
+			}
+			$bundleInstance->build($bundleRoot);
 		}
 		$json = json_encode($cache, JSON_PRETTY_PRINT);
 		file_put_contents($root . '/../bundles/cache.json', $json);
