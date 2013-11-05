@@ -106,6 +106,26 @@ class BundleRoute {
 		return $json;
 	}
 
+	public function upgrade ($root) {
+		$dirFiles = glob($root . '/../bundles/*', GLOB_ONLYDIR);
+		foreach ($dirFiles as $bundle) {
+			$tmp = explode('/', $bundle);
+			$bundleName = array_pop($tmp);
+			$bundleRoot = $bundle . '/public';
+			$bundleApplication = $bundleRoot . '/../Application.php';
+			if (!file_exists($bundleApplication)) {
+				continue;
+			}
+			require_once($bundleApplication);
+			$bundleClass = $bundleName . '\Application'; 
+			$bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
+			if (!method_exists($bundleInstance, 'upgrade')) {
+				continue;
+			}
+			$bundleInstance->upgrade($bundleRoot);
+		}
+	}
+
 	private function assetSymlinks ($root, $bundleName) {
 		foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
 			$target = $root . '/../bundles/' . $bundleName . '/public/' . $dir;
