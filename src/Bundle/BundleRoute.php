@@ -29,6 +29,7 @@ class BundleRoute {
 	private $slim;
 	private $container;
 	private $formRoute;
+	private $helperRoute;
 
 	public function cacheSet ($cache) {
 		$this->cache = $cache;
@@ -38,6 +39,7 @@ class BundleRoute {
 		$this->container = $container;
 		$this->slim = $container->slim;
 		$this->formRoute = $container->formRoute;
+		$this->helperRoute = $container->helperRoute;
 	}
 
 	public function app ($root) {
@@ -66,6 +68,7 @@ class BundleRoute {
 			}
 			$this->formRoute->json($bundle);
 			$this->formRoute->app($bundleRoot, $bundle);
+			$this->helperRoute->helpers($bundleRoot, false);
 			$className = $root . '/../bundles/' . $bundle . '/Application.php';
 			if (!file_exists($className)) {
 				continue;
