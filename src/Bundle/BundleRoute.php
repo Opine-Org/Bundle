@@ -29,7 +29,6 @@ class BundleRoute {
 	private $slim;
 	private $container;
 	private $formRoute;
-	private $helperRoute;
 
 	public function cacheSet ($cache) {
 		$this->cache = $cache;
@@ -39,7 +38,6 @@ class BundleRoute {
 		$this->container = $container;
 		$this->slim = $container->slim;
 		$this->formRoute = $container->formRoute;
-		$this->helperRoute = $container->helperRoute;
 	}
 
 	public function app ($root) {
@@ -55,12 +53,10 @@ class BundleRoute {
 		if (!is_array($bundles)) {
 			return;
 		}
-
 		$uriBase = $this->slim->request->getResourceUri();
 		if (substr_count($uriBase, '/') > 0) {
 			$uriBase = explode('/', trim($uriBase, '/'))[0];
 		}
-		
 		foreach ($bundles as $bundle) {
 			$bundleRoot = $root . '/../bundles/' . $bundle . '/public';
 			if ($uriBase != $bundle) {
@@ -68,7 +64,6 @@ class BundleRoute {
 			}
 			$this->formRoute->json($bundle);
 			$this->formRoute->app($bundleRoot, $bundle);
-			$this->helperRoute->helpers($bundleRoot, false);
 			$className = $root . '/../bundles/' . $bundle . '/Application.php';
 			if (!file_exists($className)) {
 				continue;
