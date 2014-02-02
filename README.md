@@ -1,4 +1,4 @@
-bundle
+Bundle
 ======
 
-Embed FMF projects into other FMF projects
+Embed Opine projects withing other Opine projects

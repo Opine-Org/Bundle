@@ -1,7 +1,7 @@
 {
-    "name": "virtuecenter/bundle",
+    "name": "opine/bundle",
     "type": "library",
-    "description": "Embed FMF projects into other FMF projects",
+    "description": "Embed Opine projects withing other Opine projects",
     "keywords": [],
     "license": "MIT",
     "authors": [
@@ -16,6 +16,6 @@
     	"php": ">=5.4.0"
     },
     "autoload": {
-        "psr-0": {"Bundle": "src/"}
+        "psr-4": {"Opine\\": "src/"}
     }
 }
