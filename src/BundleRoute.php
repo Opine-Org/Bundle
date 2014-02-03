@@ -38,6 +38,7 @@ class BundleRoute {
         $this->container = $container;
         $this->slim = $container->slim;
         $this->formRoute = $container->formRoute;
+        $this->yamlSlow = $container->yamlSlow;
     }
 
     public function app ($root) {
@@ -57,33 +58,42 @@ class BundleRoute {
         if (substr_count($uriBase, '/') > 0) {
             $uriBase = explode('/', trim($uriBase, '/'))[0];
         }
-        foreach ($bundles as $bundle) {
-            $bundleRoot = $root . '/../bundles/' . $bundle . '/public';
-            if ($uriBase != $bundle) {
+        foreach ($bundles as $bundleName => $bundle) {
+            $bundleRoot = $root . '/../bundles/' . $bundleName . '/public';
+            if ($uriBase != $bundle['route']) {
                 continue;
             }
-            $this->formRoute->json($bundle);
-            $this->formRoute->app($bundleRoot, $bundle);
-            $className = $root . '/../bundles/' . $bundle . '/Application.php';
+            $this->formRoute->json($bundleName);
+            $this->formRoute->app($bundleRoot, $bundleName);
+            $className = $root . '/../bundles/' . $bundleName . '/Application.php';
             if (!file_exists($className)) {
                 continue;
             }
-            require $className;
-            $instanceName = $bundle . '\Application';
+            require_once($className);
+            $instanceName = $bundle['class'];
             $bundleInstance = new $instanceName($this->container, $root, $bundleRoot);
             $bundleInstance->app();
         }
     }
 
     public function build ($root) {
-        $cache = [];
-        $dirFiles = glob($root . '/../bundles/*', GLOB_ONLYDIR);
-        foreach ($dirFiles as $bundle) {
-            $tmp = explode('/', $bundle);
-            $bundleName = array_pop($tmp);
-            $cache[] = $bundleName;
+        $configFile = $root . '/../bundles/bundles.yml';
+        if (!file_exists($configFile)) {
+            return;
+        }
+        if (function_exists('yaml_parse_file')) {
+            $config = yaml_parse_file($configFile);
+        } else {
+            $config = $this->yamlSlow->parse($configFile);
+        }
+        if ($config == false) {
+            throw new \Exception('Can not parse bundles YAML file: ' . $configFile);
+        }
+        $bundles = $config['bundles'];
+        foreach ($bundles as $bundleName => $bundle) {
             $this->assetSymlinks($root, $bundleName);
-            $bundleRoot = $bundle . '/public';
+            $path = $root . '/../bundles/' . $bundleName;
+            $bundleRoot = $path . '/public';
             if (file_exists($bundleRoot . '/../forms')) {
                 $this->formRoute->build($bundleRoot, '%dataAPI%', $bundleName);
             }
@@ -92,14 +102,14 @@ class BundleRoute {
                 continue;
             }
             require_once($bundleApplication);
-            $bundleClass = $bundleName . '\Application'; 
+            $bundleClass = $bundle['class'];
             $bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
             }
             $bundleInstance->build($bundleRoot);
         }
-        $json = json_encode($cache, JSON_PRETTY_PRINT);
+        $json = json_encode($bundles, JSON_PRETTY_PRINT);
         file_put_contents($root . '/../bundles/cache.json', $json);
         return $json;
     }
