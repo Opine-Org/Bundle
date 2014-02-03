@@ -128,13 +128,13 @@ class BundleRoute {
         foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
             $target = $root . '/../bundles/' . $bundleName . '/public/' . $dir;
             if (!file_exists($target)) {
-                mkdir($target);
+                mkdir($target, 0700, true);
             }
             if ($dir == 'layouts' || $dir == 'partials') {
                 foreach (['collections', 'documents', 'forms'] as $sub) {
                     $targetSub = $target . '/' . $sub;
                     if (!file_exists($targetSub)) {
-                        mkdir ($targetSub);
+                        mkdir ($targetSub, 0700, true);
                     }
                 }
             }
