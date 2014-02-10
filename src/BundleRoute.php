@@ -91,6 +91,10 @@ class BundleRoute {
         }
         $bundles = $config['bundles'];
         foreach ($bundles as $bundleName => $bundle) {
+            if (isset($bundle['vendorpath'])) {
+                symlink($root . '/../vendor/' . $bundle['vendorpath'], $root . '/../bundles/' . $bundleName);
+                exit;
+            }
             $this->assetSymlinks($root, $bundleName);
             $path = $root . '/../bundles/' . $bundleName;
             $bundleRoot = $path . '/public';
