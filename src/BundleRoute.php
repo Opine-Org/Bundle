@@ -26,7 +26,6 @@ namespace Opine;
 
 class BundleRoute {
     public $cache = false;
-    private $slim;
     private $container;
     private $formRoute;
 
@@ -36,7 +35,6 @@ class BundleRoute {
 
     public function __construct ($container) {
         $this->container = $container;
-        $this->slim = $container->slim;
         $this->formRoute = $container->formRoute;
         $this->yamlSlow = $container->yamlSlow;
     }
@@ -54,7 +52,7 @@ class BundleRoute {
         if (!is_array($bundles)) {
             return;
         }
-        $uriBase = $this->slim->request->getResourceUri();
+        $uriBase = str_replace('?' . $_SERVER['QUERY_STRING'], '', $_SERVER['REQUEST_URI']);
         if (substr_count($uriBase, '/') > 0) {
             $uriBase = explode('/', trim($uriBase, '/'))[0];
         }
