@@ -61,7 +61,7 @@ class BundleRoute {
             if ($uriBase != $bundle['route']) {
                 continue;
             }
-            $this->formRoute->json($bundleName);
+            $this->formRoute->json($bundleName);          
             $this->formRoute->app($bundleRoot, $bundleName);
             $className = $root . '/../bundles/' . $bundleName . '/Application.php';
             if (!file_exists($className)) {
