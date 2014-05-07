@@ -150,8 +150,8 @@ class BundleRoute {
                 }
             }
             $linkDir = $root . '/' . $dir . '/' . $bundleName;
-            if (!file_exists($linkDir)) {
-                symlink($target, $linkDir);
+            if (!file_exists($linkDir) && file_exists($target)) {
+                @symlink($target, $linkDir);
             }
         }
     }
