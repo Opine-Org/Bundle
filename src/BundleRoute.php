@@ -58,19 +58,23 @@ class BundleRoute {
         }
         foreach ($bundles as $bundleName => $bundle) {
             $bundleRoot = $root . '/../bundles/' . $bundleName . '/public';
-            if ($uriBase != $bundle['route']) {
+            $baseCheck = $bundleName;
+            if (isset($bundle['route'])) {
+                $baseCheck = $bundle['route'];
+            }
+            if ($uriBase != $baseCheck) {
                 continue;
             }
             $this->formRoute->json($bundleName);          
             $this->formRoute->app($bundleRoot, $bundleName);
-            $className = $root . '/../bundles/' . $bundleName . '/Application.php';
+            $className = $root . '/../bundles/' . $bundleName . '/Route.php';
             if (!file_exists($className)) {
                 continue;
             }
             require_once($className);
             $instanceName = $bundle['class'];
             $bundleInstance = new $instanceName($this->container, $root, $bundleRoot);
-            $bundleInstance->app();
+            $bundleInstance->paths();
         }
     }
 
@@ -98,12 +102,12 @@ class BundleRoute {
             if (file_exists($bundleRoot . '/../forms')) {
                 $this->formRoute->build($bundleRoot, '%dataAPI%', $bundleName);
             }
-            $bundleApplication = $bundleRoot . '/../Application.php';
+            $bundleApplication = $bundleRoot . '/../Route.php';
             if (!file_exists($bundleApplication)) {
                 continue;
             }
             require_once($bundleApplication);
-            $bundleClass = $bundle['class'];
+            $bundleClass = $bundle['class'] . '\Route';
             $bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
@@ -121,12 +125,12 @@ class BundleRoute {
             $tmp = explode('/', $bundle);
             $bundleName = array_pop($tmp);
             $bundleRoot = $bundle . '/public';
-            $bundleApplication = $bundleRoot . '/../Application.php';
+            $bundleApplication = $bundleRoot . '/../Route.php';
             if (!file_exists($bundleApplication)) {
                 continue;
             }
             require_once($bundleApplication);
-            $bundleClass = $bundleName . '\Application'; 
+            $bundleClass = $bundleName . '\Route'; 
             $bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
             if (!method_exists($bundleInstance, 'upgrade')) {
                 continue;
