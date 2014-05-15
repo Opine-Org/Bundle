@@ -28,6 +28,7 @@ class BundleRoute {
     public $cache = false;
     private $container;
     private $formRoute;
+    private $collectionRoute;
 
     public function cacheSet ($cache) {
         $this->cache = $cache;
@@ -36,6 +37,7 @@ class BundleRoute {
     public function __construct ($container) {
         $this->container = $container;
         $this->formRoute = $container->formRoute;
+        $this->collectionRoute = $container->collectionRoute;
         $this->yamlSlow = $container->yamlSlow;
     }
 
@@ -67,12 +69,13 @@ class BundleRoute {
             }
             $this->formRoute->json($bundleName);          
             $this->formRoute->app($bundleRoot, $bundleName);
+            $this->collectionRoute->json();
             $className = $root . '/../bundles/' . $bundleName . '/Route.php';
             if (!file_exists($className)) {
                 continue;
             }
             require_once($className);
-            $instanceName = $bundle['class'];
+            $instanceName = $bundle['class'] . '\Route';
             $bundleInstance = new $instanceName($this->container, $root, $bundleRoot);
             $bundleInstance->paths();
         }
@@ -143,13 +146,13 @@ class BundleRoute {
         foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
             $target = $root . '/../bundles/' . $bundleName . '/public/' . $dir;
             if (!file_exists($target)) {
-                mkdir($target, 0700, true);
+                @mkdir($target, 0700, true);
             }
             if ($dir == 'layouts' || $dir == 'partials') {
                 foreach (['collections', 'documents', 'forms'] as $sub) {
                     $targetSub = $target . '/' . $sub;
                     if (!file_exists($targetSub)) {
-                        mkdir ($targetSub, 0700, true);
+                        @mkdir ($targetSub, 0700, true);
                     }
                 }
             }
