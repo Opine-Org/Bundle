@@ -69,7 +69,7 @@ class BundleRoute {
             }
             $this->formRoute->json($bundleName);          
             $this->formRoute->app($bundleRoot, $bundleName);
-            $this->collectionRoute->json($bundleRoot);
+            //$this->collectionRoute->json($bundleRoot);
             $className = $root . '/../bundles/' . $bundleName . '/Route.php';
             if (!file_exists($className)) {
                 continue;
