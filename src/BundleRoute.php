@@ -34,18 +34,31 @@ class BundleRoute {
         $this->cache = $cache;
     }
 
-    public function __construct ($container) {
+    public function __construct ($root, $container) {
         $this->container = $container;
         $this->formRoute = $container->formRoute;
         $this->collectionRoute = $container->collectionRoute;
         $this->yamlSlow = $container->yamlSlow;
+        $this->root = $root;
     }
 
-    public function app ($root) {
+    public function bundles ($names=false) {
+        $cacheFile = $this->root . '/../bundles/cache.json';
+        if (!file_exists($cacheFile)) {
+            return [];
+        }
+        $bundles = (array)json_decode(file_get_contents($cacheFile), true);
+        if ($names === true) {
+            return array_keys($bundles);
+        }
+        return $bundles;
+    }
+
+    public function app () {
         if (!empty($this->cache)) {
             $bundles = $this->cache;
         } else {
-            $cacheFile = $root . '/../bundles/cache.json';
+            $cacheFile = $this->root . '/../bundles/cache.json';
             if (!file_exists($cacheFile)) {
                 return;
             }
@@ -59,7 +72,7 @@ class BundleRoute {
             $uriBase = explode('/', trim($uriBase, '/'))[0];
         }
         foreach ($bundles as $bundleName => $bundle) {
-            $bundleRoot = $root . '/../bundles/' . $bundleName . '/public';
+            $bundleRoot = $this->root . '/../bundles/' . $bundleName . '/public';
             $baseCheck = $bundleName;
             if (isset($bundle['route'])) {
                 $baseCheck = $bundle['route'];
@@ -67,22 +80,22 @@ class BundleRoute {
             if ($uriBase != $baseCheck) {
                 continue;
             }
-            $this->formRoute->json($bundleName);          
-            $this->formRoute->app($bundleRoot, $bundleName);
+            //$this->formRoute->json($bundleName);          
+            //$this->formRoute->app($bundleRoot, $bundleName);
             $this->collectionRoute->json($bundleName, $bundleName . '\Collection\\');
-            $className = $root . '/../bundles/' . $bundleName . '/Route.php';
+            $className = $this->root . '/../bundles/' . $bundleName . '/Route.php';
             if (!file_exists($className)) {
                 continue;
             }
             require_once($className);
             $instanceName = $bundle['class'] . '\Route';
-            $bundleInstance = new $instanceName($this->container, $root, $bundleRoot);
+            $bundleInstance = new $instanceName($this->container, $this->root, $bundleRoot);
             $bundleInstance->paths();
         }
     }
 
-    public function build ($root) {
-        $configFile = $root . '/../bundles/bundles.yml';
+    public function build () {
+        $configFile = $this->root . '/../bundles/bundles.yml';
         if (!file_exists($configFile)) {
             return;
         }
@@ -97,10 +110,10 @@ class BundleRoute {
         $bundles = $config['bundles'];
         foreach ($bundles as $bundleName => $bundle) {
             if (isset($bundle['vendorpath'])) {
-                @symlink($root . '/../vendor/' . $bundle['vendorpath'], $root . '/../bundles/' . $bundleName);
+                @symlink($this->root . '/../vendor/' . $bundle['vendorpath'], $this->root . '/../bundles/' . $bundleName);
             }
-            $this->assetSymlinks($root, $bundleName);
-            $path = $root . '/../bundles/' . $bundleName;
+            $this->assetSymlinks($this->root, $bundleName);
+            $path = $this->root . '/../bundles/' . $bundleName;
             $bundleRoot = $path . '/public';
             if (file_exists($bundleRoot . '/../forms')) {
                 $this->formRoute->build($bundleRoot, '%dataAPI%', $bundleName);
@@ -111,19 +124,19 @@ class BundleRoute {
             }
             require_once($bundleApplication);
             $bundleClass = $bundle['class'] . '\Route';
-            $bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
+            $bundleInstance = new $bundleClass($this->container, $this->root, $bundleRoot);
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
             }
             $bundleInstance->build($bundleRoot);
         }
         $json = json_encode($bundles, JSON_PRETTY_PRINT);
-        file_put_contents($root . '/../bundles/cache.json', $json);
+        file_put_contents($this->root . '/../bundles/cache.json', $json);
         return $json;
     }
 
-    public function upgrade ($root) {
-        $dirFiles = glob($root . '/../bundles/*', GLOB_ONLYDIR);
+    public function upgrade () {
+        $dirFiles = glob($this->root . '/../bundles/*', GLOB_ONLYDIR);
         foreach ($dirFiles as $bundle) {
             $tmp = explode('/', $bundle);
             $bundleName = array_pop($tmp);
@@ -134,7 +147,7 @@ class BundleRoute {
             }
             require_once($bundleApplication);
             $bundleClass = $bundleName . '\Route'; 
-            $bundleInstance = new $bundleClass($this->container, $root, $bundleRoot);
+            $bundleInstance = new $bundleClass($this->container, $this->root, $bundleRoot);
             if (!method_exists($bundleInstance, 'upgrade')) {
                 continue;
             }
@@ -142,9 +155,9 @@ class BundleRoute {
         }
     }
 
-    private function assetSymlinks ($root, $bundleName) {
+    private function assetSymlinks ($bundleName) {
         foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
-            $target = $root . '/../bundles/' . $bundleName . '/public/' . $dir;
+            $target = $this->root . '/../bundles/' . $bundleName . '/public/' . $dir;
             if (!file_exists($target)) {
                 @mkdir($target, 0700, true);
             }
@@ -156,7 +169,7 @@ class BundleRoute {
                     }
                 }
             }
-            $linkDir = $root . '/' . $dir . '/' . $bundleName;
+            $linkDir = $this->root . '/' . $dir . '/' . $bundleName;
             if (!file_exists($linkDir) && file_exists($target)) {
                 @symlink($target, $linkDir);
             }
