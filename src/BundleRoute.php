@@ -29,9 +29,19 @@ class BundleRoute {
     private $container;
     private $formRoute;
     private $collectionRoute;
+    private $cacheFile;
 
     public function cacheSet ($cache) {
         $this->cache = $cache;
+    }
+
+    public function cacheRead () {
+        return (array)json_decode(file_get_contents($this->cacheFile), true);
+    }
+
+    private function cacheWrite (array &$bundles) {
+        $bundles = json_encode($bundles, JSON_PRETTY_PRINT);
+        file_put_contents($this->cacheFile, $bundles);
     }
 
     public function __construct ($root, $container) {
@@ -40,14 +50,14 @@ class BundleRoute {
         $this->collectionRoute = $container->collectionRoute;
         $this->yamlSlow = $container->yamlSlow;
         $this->root = $root;
+        $this->cacheFile = $this->root . '/../cache/bundles.json';
     }
 
     public function bundles ($names=false) {
-        $cacheFile = $this->root . '/../bundles/cache.json';
-        if (!file_exists($cacheFile)) {
+        if (!file_exists($this->cacheFile)) {
             return [];
         }
-        $bundles = (array)json_decode(file_get_contents($cacheFile), true);
+        $bundles = $this->cacheRead();
         if ($names === true) {
             return array_keys($bundles);
         }
@@ -58,11 +68,10 @@ class BundleRoute {
         if (!empty($this->cache)) {
             $bundles = $this->cache;
         } else {
-            $cacheFile = $this->root . '/../bundles/cache.json';
-            if (!file_exists($cacheFile)) {
+            if (!file_exists($this->cacheFile)) {
                 return;
             }
-            $bundles = (array)json_decode(file_get_contents($cacheFile), true);
+            $bundles = $this->cacheRead();
         }
         if (!is_array($bundles)) {
             return;
@@ -104,19 +113,13 @@ class BundleRoute {
             }
             $this->assetSymlinks($bundleName);
             $bundleRoot = $this->root . '/../bundles/' . $bundleName . '/public';
-            
-            //if (file_exists($bundleRoot . '/../forms')) {
-            //    $this->formRoute->build($bundleRoot, '%dataAPI%', $bundleName);
-            //}
-            
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
             }
             $bundleInstance->build($bundleRoot);
         }
-        $json = json_encode($bundles, JSON_PRETTY_PRINT);
-        file_put_contents($this->root . '/../bundles/cache.json', $json);
-        return $json;
+        $this->cacheWrite($bundles);
+        return $bundles;
     }
 
     public function upgrade () {
