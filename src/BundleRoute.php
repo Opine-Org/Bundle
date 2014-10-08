@@ -36,6 +36,9 @@ class BundleRoute {
     }
 
     public function cacheRead () {
+        if (!file_exists($this->cacheFile)) {
+            return [];
+        }
         return (array)json_decode(file_get_contents($this->cacheFile), true);
     }
 
@@ -86,6 +89,9 @@ class BundleRoute {
             if ($bundleInstance === false) {
                 throw new \Exception('Bundle: ' . $bundleName . ': not in container');
             }
+            if (!method_exists($bundleInstance, 'paths')) {
+                continue;
+            }
             $bundleInstance->paths();
         }
     }
@@ -106,6 +112,10 @@ class BundleRoute {
         $bundles = $config['bundles'];
         foreach ($bundles as $bundleName => $bundle) {
             $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
+            if (!method_exists($bundleInstance, 'location')) {
+                echo 'No location method for bundle: ', $bundleName, "\n";
+                continue;
+            }
             $location = $bundleInstance->location();
             $target = $this->root . '/../bundles/' . $bundleName;
             if (!file_exists($target)) {
