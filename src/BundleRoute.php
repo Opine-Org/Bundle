@@ -111,18 +111,23 @@ class BundleRoute {
         }
         $bundles = $config['bundles'];
         foreach ($bundles as $bundleName => $bundle) {
-            $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
-            if (!method_exists($bundleInstance, 'location')) {
-                echo 'No location method for bundle: ', $bundleName, "\n";
+            $routeClass = str_replace('\\\\', '\\', ('\\' . $bundle['class'] . '\Route'));
+            if (!class_exists($routeClass)) {
+                echo 'No Route class: ', $routeClass, "\n";
                 continue;
             }
-            $location = $bundleInstance->location();
+            if (!method_exists($routeClass, 'location')) {
+                echo 'No location method for bundle route class: ', $routeClass, "\n";
+                continue;
+            }
+            $location = call_user_func([$routeClass, 'location']);
             $target = $this->root . '/../bundles/' . $bundleName;
             if (!file_exists($target)) {
                 symlink($location, $target);
             }
             $this->assetSymlinks($bundleName);
             $bundleRoot = $this->root . '/../bundles/' . $bundleName . '/public';
+            $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
             }
