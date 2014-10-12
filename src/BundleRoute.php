@@ -28,7 +28,6 @@ class BundleRoute {
     public $cache = false;
     private $container;
     private $formRoute;
-    private $collectionRoute;
     private $cacheFile;
 
     public function cacheSet ($cache) {
@@ -50,7 +49,6 @@ class BundleRoute {
     public function __construct ($root, $container) {
         $this->container = $container;
         $this->formRoute = $container->formRoute;
-        $this->collectionRoute = $container->collectionRoute;
         $this->yamlSlow = $container->yamlSlow;
         $this->root = $root;
         $this->cacheFile = $this->root . '/../cache/bundles.json';
@@ -110,8 +108,9 @@ class BundleRoute {
             throw new \Exception('Can not parse bundles YAML file: ' . $configFile);
         }
         $bundles = $config['bundles'];
-        foreach ($bundles as $bundleName => $bundle) {
+        foreach ($bundles as $bundleName => &$bundle) {
             $routeClass = str_replace('\\\\', '\\', ('\\' . $bundle['class'] . '\Route'));
+            $bundle['route'] = $routeClass;
             if (!class_exists($routeClass)) {
                 echo 'No Route class: ', $routeClass, "\n";
                 continue;
@@ -121,12 +120,14 @@ class BundleRoute {
                 continue;
             }
             $location = call_user_func([$routeClass, 'location']);
+            $bundle['location'] = $location;
             $target = $this->root . '/../bundles/' . $bundleName;
             if (!file_exists($target)) {
                 symlink($location, $target);
             }
             $this->assetSymlinks($bundleName);
             $bundleRoot = $this->root . '/../bundles/' . $bundleName . '/public';
+            $bundle['root'] = $bundleRoot;
             $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
