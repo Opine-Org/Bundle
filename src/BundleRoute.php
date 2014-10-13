@@ -115,7 +115,7 @@ class BundleRoute {
             }
             $bundle['name'] = $bundleName;
             $bundle['route'] = str_replace('\\\\', '\\', ('\\' . $bundle['namespace'] . '\Route'));
-            $bundle['routeService'] = $bundle['name'];
+            $bundle['routeService'] = $bundle['name'] . 'Route';
             if (!class_exists($bundle['route'])) {
                 echo 'No Route class: ', $bundle['route'], "\n";
                 continue;
@@ -125,6 +125,10 @@ class BundleRoute {
                 continue;
             }
             $bundle['location'] = call_user_func([$bundle['route'], 'location']);
+            $target = $this->root . '/../bundles/' . $bundle['name'];
+            if (!file_exists($target)) {
+               symlink($bundle['location'], $target);
+            }
             $bundle['root'] = $bundle['location'] . '/public';
             $this->assets($bundle);
             $bundleInstance = $this->container->{$bundle['routeService']};
