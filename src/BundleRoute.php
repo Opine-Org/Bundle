@@ -28,7 +28,6 @@ use Exception;
 class BundleRoute {
     public $cache = false;
     private $container;
-    private $formRoute;
     private $cacheFile;
 
     public function cacheSet ($cache) {
@@ -49,7 +48,6 @@ class BundleRoute {
 
     public function __construct ($root, $container) {
         $this->container = $container;
-        $this->formRoute = $container->formRoute;
         $this->yamlSlow = $container->yamlSlow;
         $this->root = $root;
         $this->cacheFile = $this->root . '/../cache/bundles.json';
