@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 namespace Opine;
+use Exception;
 
 class BundleRoute {
     public $cache = false;
@@ -85,7 +86,7 @@ class BundleRoute {
             }
             $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
             if ($bundleInstance === false) {
-                throw new \Exception('Bundle: ' . $bundleName . ': not in container');
+                throw new Exception('Bundle: ' . $bundleName . ': not in container');
             }
             if (!method_exists($bundleInstance, 'paths')) {
                 continue;
@@ -105,30 +106,28 @@ class BundleRoute {
             $config = $this->yamlSlow->parse($configFile);
         }
         if ($config == false) {
-            throw new \Exception('Can not parse bundles YAML file: ' . $configFile);
+            throw new Exception('Can not parse bundles YAML file: ' . $configFile);
         }
         $bundles = $config['bundles'];
         foreach ($bundles as $bundleName => &$bundle) {
-            $routeClass = str_replace('\\\\', '\\', ('\\' . $bundle['class'] . '\Route'));
-            $bundle['route'] = $routeClass;
-            if (!class_exists($routeClass)) {
-                echo 'No Route class: ', $routeClass, "\n";
+            if (!isset($bundle['namespace'])) {
+                throw new Exception('Bundle config file missing namespace');
+            }
+            $bundle['name'] = $bundleName;
+            $bundle['route'] = str_replace('\\\\', '\\', ('\\' . $bundle['namespace'] . '\Route'));
+            $bundle['routeService'] = $bundle['name'];
+            if (!class_exists($bundle['route'])) {
+                echo 'No Route class: ', $bundle['route'], "\n";
                 continue;
             }
-            if (!method_exists($routeClass, 'location')) {
-                echo 'No location method for bundle route class: ', $routeClass, "\n";
+            if (!method_exists($bundle['route'], 'location')) {
+                echo 'No location method for bundle route class: ', $bundle['route'], "\n";
                 continue;
             }
-            $location = call_user_func([$routeClass, 'location']);
-            $bundle['location'] = $location;
-            $target = $this->root . '/../bundles/' . $bundleName;
-            if (!file_exists($target)) {
-                symlink($location, $target);
-            }
-            $this->assetSymlinks($bundleName);
-            $bundleRoot = $this->root . '/../bundles/' . $bundleName . '/public';
-            $bundle['root'] = $bundleRoot;
-            $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
+            $bundle['location'] = call_user_func([$bundle['route'], 'location']);
+            $bundle['root'] = $bundle['location'] . '/public';
+            $this->assets($bundle);
+            $bundleInstance = $this->container->{$bundle['routeService']};
             if (!method_exists($bundleInstance, 'build')) {
                 continue;
             }
@@ -152,24 +151,37 @@ class BundleRoute {
         }
     }
 
-    private function assetSymlinks ($bundleName) {
+    private function assets ($bundle) {
         foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
-            $target = $this->root . '/../bundles/' . $bundleName . '/public/' . $dir;
-            if (!file_exists($target)) {
-                @mkdir($target, 0700, true);
+            $src = $bundle['root'] . '/' . $dir;
+            if (!file_exists($src)) {
+                continue;
             }
-            if ($dir == 'layouts' || $dir == 'partials') {
-                foreach (['collections', 'documents', 'forms'] as $sub) {
-                    $targetSub = $target . '/' . $sub;
-                    if (!file_exists($targetSub)) {
-                        @mkdir ($targetSub, 0700, true);
+            $dst = $this->root . '/' . $dir . '/' . $bundle['name'];
+            self::assetCopy($src, $dst);
+        }
+    }
+
+    private static function assetCopy($src, $dst) {
+        $dir = opendir($src);
+        @mkdir($dst, 0777, true);
+        while(false !== ($file = readdir($dir))) {
+            if (($file != '.') && ($file != '..')) {
+                if (is_dir($src . '/' . $file)) {
+                    self::assetCopy($src . '/' . $file, $dst . '/' . $file);
+                } else {
+                    if (!file_exists($src . '/' . $file)) {
+                        echo 'Bad file: ', $src . '/' . $file, "\n";
+                        continue;
+                    }
+                    $result = copy($src . '/' . $file, $dst . '/' . $file);
+                    if ($result === false) {
+                        echo 'Can not copy: ', $src . '/' . $file, ' TO: ', $dst . '/' . $file, "\n";
+                        exit;
                     }
                 }
             }
-            $linkDir = $this->root . '/' . $dir . '/' . $bundleName;
-            if (!file_exists($linkDir) && file_exists($target)) {
-                @symlink($target, $linkDir);
-            }
         }
+        closedir($dir);
     }
 }
