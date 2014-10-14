@@ -24,6 +24,9 @@
  */
 namespace Opine;
 use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use FilesystemIterator;
 
 class BundleRoute {
     public $cache = false;
@@ -113,7 +116,8 @@ class BundleRoute {
             }
             $bundle['name'] = $bundleName;
             $bundle['route'] = str_replace('\\\\', '\\', ('\\' . $bundle['namespace'] . '\Route'));
-            $bundle['routeService'] = $bundle['name'] . 'Route';
+            $bundle['routeService'] = strtolower($bundle['name']) . 'Route';
+            $bundle['modelService'] = strtolower($bundle['name']) . 'Model';
             if (!class_exists($bundle['route'])) {
                 echo 'No Route class: ', $bundle['route'], "\n";
                 continue;
@@ -129,11 +133,11 @@ class BundleRoute {
             }
             $bundle['root'] = $bundle['location'] . '/public';
             $this->assets($bundle);
-            $bundleInstance = $this->container->{$bundle['routeService']};
-            if (!method_exists($bundleInstance, 'build')) {
+            $bundleModelInstance = $this->container->{$bundle['modelService']};
+            if (!method_exists($bundleModelInstance, 'build')) {
                 continue;
             }
-            $bundleInstance->build($bundleRoot);
+            $bundleModelInstance->build($bundle['root']);
         }
         $this->cacheWrite($bundles);
         return $bundles;
@@ -159,31 +163,28 @@ class BundleRoute {
             if (!file_exists($src)) {
                 continue;
             }
-            $dst = $this->root . '/' . $dir . '/' . $bundle['name'];
-            self::assetCopy($src, $dst);
+            $assets = $this->assetsRead($src);
+            foreach ($assets as $asset) {
+                $parts = explode('/' . $dir . '/', (string)$asset, 2);
+                $dst = $this->root . '/' . $dir . '/' . $bundle['name'] . '/' . $parts[1];
+                if (!file_exists(dirname($dst))) {
+                    @mkdir(dirname($dst), 0777, true);
+                }
+                $result = copy((string)$asset, $dst);
+                if ($result === false) {
+                    echo 'Can not copy: ', (string)$asset, ' ', $dst, "\n";
+                }
+            }   
         }
     }
 
-    private static function assetCopy($src, $dst) {
-        $dir = opendir($src);
-        @mkdir($dst, 0777, true);
-        while(false !== ($file = readdir($dir))) {
-            if (($file != '.') && ($file != '..')) {
-                if (is_dir($src . '/' . $file)) {
-                    self::assetCopy($src . '/' . $file, $dst . '/' . $file);
-                } else {
-                    if (!file_exists($src . '/' . $file)) {
-                        echo 'Bad file: ', $src . '/' . $file, "\n";
-                        continue;
-                    }
-                    $result = copy($src . '/' . $file, $dst . '/' . $file);
-                    if ($result === false) {
-                        echo 'Can not copy: ', $src . '/' . $file, ' TO: ', $dst . '/' . $file, "\n";
-                        exit;
-                    }
-                }
-            }
+    private function assetsRead($folder) {
+        $dir = new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($dir);
+        $fileList = [];
+        foreach ($files as $file) {
+            $fileList[] = $file->getPathname();
         }
-        closedir($dir);
+        return $fileList;
     }
 }
