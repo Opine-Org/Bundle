@@ -1,0 +1,4 @@
+services:
+    bundleModel:
+        class:     'Opine\Bundle\Model'
+        arguments: ['%root%', '@container']

@@ -22,13 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-namespace Opine;
+namespace Opine\Bundle;
 use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use FilesystemIterator;
 
-class BundleRoute {
+class Model {
     public $cache = false;
     private $container;
     private $cacheFile;
