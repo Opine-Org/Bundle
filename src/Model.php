@@ -34,6 +34,13 @@ class Model {
     private $cacheFile;
 
     public function cacheSet ($cache) {
+        if (empty($cache)) {
+            if (!file_exists($this->cacheFile)) {
+                return;
+            }
+            $this->cache = json_decode(file_get_contents($this->cacheFile), true);
+            return;
+        }
         $this->cache = $cache;
     }
 
