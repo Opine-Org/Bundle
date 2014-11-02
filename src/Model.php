@@ -27,6 +27,7 @@ use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use FilesystemIterator;
+use Symfony\Component\Yaml\Yaml;
 
 class Model {
     public $cache = false;
@@ -58,7 +59,6 @@ class Model {
 
     public function __construct ($root, $container) {
         $this->container = $container;
-        $this->yamlSlow = $container->yamlSlow;
         $this->root = $root;
         $this->cacheFile = $this->root . '/../cache/bundles.json';
     }
@@ -111,7 +111,7 @@ class Model {
         if (function_exists('yaml_parse_file')) {
             $config = yaml_parse_file($configFile);
         } else {
-            $config = $this->yamlSlow->parse($configFile);
+            $config = Yaml::parse(file_get_contents($containerFile));
         }
         if ($config == false) {
             throw new Exception('Can not parse bundles YAML file: ' . $configFile);
