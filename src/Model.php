@@ -111,7 +111,7 @@ class Model {
         if (function_exists('yaml_parse_file')) {
             $config = yaml_parse_file($configFile);
         } else {
-            $config = Yaml::parse(file_get_contents($containerFile));
+            $config = Yaml::parse(file_get_contents($configFile));
         }
         if ($config == false) {
             throw new Exception('Can not parse bundles YAML file: ' . $configFile);
