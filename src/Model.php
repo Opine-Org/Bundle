@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -87,14 +87,10 @@ class Model {
             return;
         }
         foreach ($bundles as $bundleName => $bundle) {
-            $bundleRoot = $this->root . '/../bundles/' . $bundleName . '/public';
-            $baseCheck = $bundleName;
-            if (isset($bundle['route'])) {
-                $baseCheck = $bundle['route'];
-            }
             $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
             if ($bundleInstance === false) {
-                throw new Exception('Bundle: ' . $bundleName . ': not in container');
+                echo 'Bundle: ' . $bundleName . ': not in container', "\n";
+                continue;
             }
             if (!method_exists($bundleInstance, 'paths')) {
                 continue;
@@ -134,12 +130,9 @@ class Model {
                 continue;
             }
             $bundle['location'] = call_user_func([$bundle['route'], 'location']);
-            $target = $this->root . '/../bundles/' . $bundle['name'];
-            if (!file_exists($target)) {
-               symlink($bundle['location'], $target);
-            }
             $bundle['root'] = $bundle['location'] . '/public';
             $this->assets($bundle);
+            $this->apps($bundle);
             $bundleModelInstance = $this->container->{$bundle['modelService']};
             if (!method_exists($bundleModelInstance, 'build')) {
                 continue;
@@ -150,42 +143,47 @@ class Model {
         return $bundles;
     }
 
-    public function upgrade () {
-        $dirFiles = glob($this->root . '/../bundles/*', GLOB_ONLYDIR);
-        foreach ($dirFiles as $bundle) {
-            $tmp = explode('/', $bundle);
-            $bundleName = array_pop($tmp);
-            $bundleRoot = $bundle . '/public';
-            $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
-            if (!method_exists($bundleInstance, 'upgrade')) {
-                continue;
-            }
-            $bundleInstance->upgrade($bundleRoot);
-        }
-    }
-
     private function assets ($bundle) {
         foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
             $src = $bundle['root'] . '/' . $dir;
             if (!file_exists($src)) {
                 continue;
             }
-            $assets = $this->assetsRead($src);
-            foreach ($assets as $asset) {
-                $parts = explode('/' . $dir . '/', (string)$asset, 2);
+            $files = $this->folderRead($src);
+            foreach ($files as $file) {
+                $parts = explode('/' . $dir . '/', (string)$file, 2);
                 $dst = $this->root . '/' . $dir . '/' . $bundle['name'] . '/' . $parts[1];
                 if (!file_exists(dirname($dst))) {
                     @mkdir(dirname($dst), 0777, true);
                 }
-                $result = copy((string)$asset, $dst);
+                $result = copy((string)$file, $dst);
                 if ($result === false) {
-                    echo 'Can not copy: ', (string)$asset, ' ', $dst, "\n";
+                    echo 'Can not copy: ', (string)$file, ' ', $dst, "\n";
                 }
-            }   
+            }
         }
     }
 
-    private function assetsRead($folder) {
+    private function apps ($bundle) {
+        $src = $bundle['root'] . '/../app';
+        if (!file_exists($src)) {
+            return;
+        }
+        $files = $this->folderRead($src);
+        foreach ($files as $file) {
+            $parts = explode('/app/', (string)$file, 2);
+            $dst = $this->root . '/../app/' . $bundle['name'] . '/' . $parts[1];
+            if (!file_exists(dirname($dst))) {
+                @mkdir(dirname($dst), 0777, true);
+            }
+            $result = copy((string)$file, $dst);
+            if ($result === false) {
+                echo 'Can not copy: ', (string)$file, ' ', $dst, "\n";
+            }
+        }
+    }
+
+    private function folderRead($folder) {
         $dir = new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS);
         $files = new RecursiveIteratorIterator($dir);
         $fileList = [];
