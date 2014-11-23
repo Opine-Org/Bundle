@@ -87,7 +87,7 @@ class Model {
             return;
         }
         foreach ($bundles as $bundleName => $bundle) {
-            $bundleInstance = $this->container->{strtolower($bundleName) . 'Route'};
+            $bundleInstance = $this->container->get(strtolower($bundleName) . 'Route');
             if ($bundleInstance === false) {
                 echo 'Bundle: ' . $bundleName . ': not in container', "\n";
                 continue;
@@ -133,7 +133,7 @@ class Model {
             $bundle['root'] = $bundle['location'] . '/public';
             $this->assets($bundle);
             $this->apps($bundle);
-            $bundleModelInstance = $this->container->{$bundle['modelService']};
+            $bundleModelInstance = $this->container->get($bundle['modelService']);
             if (!method_exists($bundleModelInstance, 'build')) {
                 continue;
             }
