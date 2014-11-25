@@ -60,7 +60,7 @@ class Model {
     public function __construct ($root, $container) {
         $this->container = $container;
         $this->root = $root;
-        $this->cacheFile = $this->root . '/../cache/bundles.json';
+        $this->cacheFile = $this->root . '/../var/cache/bundles.json';
     }
 
     public function bundles ($names=false) {
@@ -100,7 +100,7 @@ class Model {
     }
 
     public function build () {
-        $configFile = $this->root . '/../bundles/bundles.yml';
+        $configFile = $this->root . '/../config/bundles.yml';
         if (!file_exists($configFile)) {
             return;
         }

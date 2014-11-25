@@ -11,7 +11,7 @@ class BundleTest extends PHPUnit_Framework_TestCase {
         $root = __DIR__ . '/../public';
         $config = new Config($root);
         $config->cacheSet();
-        $container = Container::instance($root, $config, $root . '/../container.yml');
+        $container = Container::instance($root, $config, $root . '/../config/container.yml');
     }
 
     public function testSample () {
