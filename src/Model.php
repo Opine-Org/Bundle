@@ -166,7 +166,6 @@ class Model {
 
     private function layoutConfigs ($bundle) {
         $src = $bundle['root'] . '/../config/layouts';
-        echo $src, "\n";
         if (!file_exists($src)) {
             return;
         }
