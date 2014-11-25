@@ -130,7 +130,7 @@ class Model {
                 continue;
             }
             $bundle['location'] = call_user_func([$bundle['route'], 'location']);
-            $bundle['root'] = $bundle['location'] . '/public';
+            $bundle['root'] = $bundle['location'] . '/../public';
             $this->assets($bundle);
             $this->apps($bundle);
             $bundleModelInstance = $this->container->get($bundle['modelService']);
