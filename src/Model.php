@@ -132,7 +132,7 @@ class Model {
             $bundle['location'] = call_user_func([$bundle['route'], 'location']);
             $bundle['root'] = $bundle['location'] . '/../public';
             $this->assets($bundle);
-            $this->apps($bundle);
+            $this->layoutConfigs($bundle);
             $bundleModelInstance = $this->container->get($bundle['modelService']);
             if (!method_exists($bundleModelInstance, 'build')) {
                 continue;
@@ -164,15 +164,16 @@ class Model {
         }
     }
 
-    private function apps ($bundle) {
-        $src = $bundle['root'] . '/../app';
+    private function layoutConfigs ($bundle) {
+        $src = $bundle['root'] . '/../config/layouts';
+        echo $src, "\n";
         if (!file_exists($src)) {
             return;
         }
         $files = $this->folderRead($src);
         foreach ($files as $file) {
-            $parts = explode('/app/', (string)$file, 2);
-            $dst = $this->root . '/../app/' . $bundle['name'] . '/' . $parts[1];
+            $parts = explode('/config/layouts/', (string)$file, 2);
+            $dst = $this->root . '/../config/layouts/' . $bundle['name'] . '/' . $parts[1];
             if (!file_exists(dirname($dst))) {
                 @mkdir(dirname($dst), 0777, true);
             }
