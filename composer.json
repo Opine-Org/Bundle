@@ -1,5 +1,5 @@
 {
-    "name": "opine\/bundle",
+    "name": "opine/bundle",
     "type": "library",
     "description": "Embed Opine projects withing other Opine projects",
     "keywords": [
@@ -10,17 +10,17 @@
         {
             "name": "Ryan Mahoney",
             "email": "ryan@virtuecenter.com",
-            "homepage": "http:\/\/opine-php.org",
+            "homepage": "http://opine-php.org",
             "role": "Developer"
         }
     ],
     "require": {
         "php": ">=5.4.0",
-        "symfony\/yaml": "2.4.*@dev"
+        "symfony/yaml": "2.6.1"
     },
     "autoload": {
         "psr-4": {
-            "Opine\\Bundle\\": "src\/"
+            "Opine\\Bundle\\": "src/"
         }
     }
 }

@@ -144,7 +144,7 @@ class Model {
     }
 
     private function assets ($bundle) {
-        foreach (['css', 'js', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
+        foreach (['css', 'js', 'jsx', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
             $src = $bundle['root'] . '/' . $dir;
             if (!file_exists($src)) {
                 continue;
