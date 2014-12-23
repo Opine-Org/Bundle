@@ -27,12 +27,18 @@ use Exception;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use FilesystemIterator;
-use Symfony\Component\Yaml\Yaml;
 
 class Model {
-    public $cache = false;
-    private $container;
+    private $root;
+    private $route;
+    private $cache;
     private $cacheFile;
+
+    public function __construct ($root, $route) {
+        $this->root = $root;
+        $this->route = $route;
+        $this->cacheFile = $this->root . '/../var/cache/bundles.json';
+    }
 
     public function cacheSet ($cache) {
         if (empty($cache)) {
@@ -45,7 +51,7 @@ class Model {
         $this->cache = $cache;
     }
 
-    public function cacheRead () {
+    private function cacheRead () {
         if (!file_exists($this->cacheFile)) {
             return [];
         }
@@ -55,12 +61,6 @@ class Model {
     private function cacheWrite (array &$bundles) {
         $bundles = json_encode($bundles, JSON_PRETTY_PRINT);
         file_put_contents($this->cacheFile, $bundles);
-    }
-
-    public function __construct ($root, $container) {
-        $this->container = $container;
-        $this->root = $root;
-        $this->cacheFile = $this->root . '/../var/cache/bundles.json';
     }
 
     public function bundles ($names=false) {
@@ -74,70 +74,34 @@ class Model {
         return $bundles;
     }
 
-    public function paths () {
-        if (!empty($this->cache)) {
-            $bundles = $this->cache;
-        } else {
-            if (!file_exists($this->cacheFile)) {
-                return;
-            }
-            $bundles = $this->cacheRead();
-        }
-        if (!is_array($bundles)) {
-            return;
-        }
-        foreach ($bundles as $bundleName => $bundle) {
-            $bundleInstance = $this->container->get(strtolower($bundleName) . 'Route');
-            if ($bundleInstance === false) {
-                echo 'Bundle: ' . $bundleName . ': not in container', "\n";
-                continue;
-            }
-            if (!method_exists($bundleInstance, 'paths')) {
-                continue;
-            }
-            $bundleInstance->paths();
-        }
-    }
-
     public function build () {
-        $configFile = $this->root . '/../config/bundles.yml';
-        if (!file_exists($configFile)) {
+        $cmd = 'cd ' . $this->root . '/../vendor && find . | egrep \'/src/[a-zA-Z_\-]*/config/routes/[a-zA-Z_\-]*.yml$\'';
+        $bundleRoutePaths = explode("\n", trim(str_replace('./', ($this->root . '/../vendor/'), shell_exec($cmd))));
+        if (!is_array($bundleRoutePaths) || empty($bundleRoutePaths)) {
             return;
         }
-        if (function_exists('yaml_parse_file')) {
-            $config = yaml_parse_file($configFile);
-        } else {
-            $config = Yaml::parse(file_get_contents($configFile));
-        }
-        if ($config == false) {
-            throw new Exception('Can not parse bundles YAML file: ' . $configFile);
-        }
-        $bundles = $config['bundles'];
-        foreach ($bundles as $bundleName => &$bundle) {
-            if (!isset($bundle['namespace'])) {
-                throw new Exception('Bundle config file missing namespace');
+        $bundles = [];
+        foreach ($bundleRoutePaths as $path) {
+            $matches = [];
+            preg_match('/\/src\/([a-zA-Z_\-]*)\/config\/routes\/[a-zA-Z_\-]*.yml$/', $path, $matches);
+            $bundleName = $matches[1];
+            $routePath = $matches[0];
+            if (!isset($bundles[$bundleName])) {
+                $bundles[$bundleName] = [
+                    'name'         => $bundleName,
+                    'modelService' => strtolower($bundleName) . 'Model',
+                    'root'         => str_replace($routePath, '', $path) . '/src/' . $bundleName . '/public',
+                    'routeFiles'   => []
+                ];
             }
-            $bundle['name'] = $bundleName;
-            $bundle['route'] = str_replace('\\\\', '\\', ('\\' . $bundle['namespace'] . '\Route'));
-            $bundle['routeService'] = strtolower($bundle['name']) . 'Route';
-            $bundle['modelService'] = strtolower($bundle['name']) . 'Model';
-            if (!class_exists($bundle['route'])) {
-                echo 'No Route class: ', $bundle['route'], "\n";
-                continue;
+            $bundles[$bundleName]['routeFiles'][] = $path;
+            $this->assets($bundles[$bundleName]);
+            $this->layoutConfigs($bundles[$bundleName]);
+            try {
+                $this->route->serviceMethod($bundles[$bundleName]['modelService'] . '@?build');
+            } catch (Exception $e) {
+                echo 'Service: ', $bundles[$bundleName]['modelService'] . '@build' . ': not in container, maybe on next build', "\n";
             }
-            if (!method_exists($bundle['route'], 'location')) {
-                echo 'No location method for bundle route class: ', $bundle['route'], "\n";
-                continue;
-            }
-            $bundle['location'] = call_user_func([$bundle['route'], 'location']);
-            $bundle['root'] = $bundle['location'] . '/../public';
-            $this->assets($bundle);
-            $this->layoutConfigs($bundle);
-            $bundleModelInstance = $this->container->get($bundle['modelService']);
-            if (!method_exists($bundleModelInstance, 'build')) {
-                continue;
-            }
-            $bundleModelInstance->build($bundle['root']);
         }
         $this->cacheWrite($bundles);
         return $bundles;

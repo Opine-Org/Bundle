@@ -1,4 +1,6 @@
 services:
     bundleModel:
-        class:     'Opine\Bundle\Model'
-        arguments: ['%root%', '@container']
+        class: Opine\Bundle\Model
+        arguments:
+            - %root%
+            - @route
