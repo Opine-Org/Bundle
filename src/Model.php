@@ -24,9 +24,6 @@
  */
 namespace Opine\Bundle;
 
-use Exception, RecursiveDirectoryIterator, RecursiveIteratorIterator, FilesystemIterator;
-use Opine\Interfaces\Route as RouteInterface;
-
 class Model
 {
     private $root;
@@ -34,7 +31,7 @@ class Model
     private $cache;
     private $cacheFile;
 
-    public function __construct($root, RouteInterface $route)
+    public function __construct($root)
     {
         $this->root = $root;
         $this->route = $route;
@@ -104,70 +101,9 @@ class Model
                 ];
             }
             $bundles[$bundleName]['routeFiles'][] = $path;
-            $this->assets($bundles[$bundleName]);
-            $this->layoutConfigs($bundles[$bundleName]);
-            try {
-                $this->route->serviceMethod($bundles[$bundleName]['modelService'].'@?build');
-            } catch (Exception $e) {
-                echo 'Service: ', $bundles[$bundleName]['modelService'].'@build'.': not in container, maybe on next build', "\n";
-            }
         }
         $this->cacheWrite($bundles);
 
         return $bundles;
-    }
-
-    private function assets($bundle)
-    {
-        foreach (['css', 'js', 'jsx', 'layouts', 'partials', 'images', 'fonts', 'helpers'] as $dir) {
-            $src = $bundle['root'].'/'.$dir;
-            if (!file_exists($src)) {
-                continue;
-            }
-            $files = $this->folderRead($src);
-            foreach ($files as $file) {
-                $parts = explode('/'.$dir.'/', (string) $file, 2);
-                $dst = $this->root.'/'.$dir.'/'.$bundle['name'].'/'.$parts[1];
-                if (!file_exists(dirname($dst))) {
-                    @mkdir(dirname($dst), 0777, true);
-                }
-                $result = copy((string) $file, $dst);
-                if ($result === false) {
-                    echo 'Can not copy: ', (string) $file, ' ', $dst, "\n";
-                }
-            }
-        }
-    }
-
-    private function layoutConfigs($bundle)
-    {
-        $src = $bundle['root'].'/../config/layouts';
-        if (!file_exists($src)) {
-            return;
-        }
-        $files = $this->folderRead($src);
-        foreach ($files as $file) {
-            $parts = explode('/config/layouts/', (string) $file, 2);
-            $dst = $this->root.'/../config/layouts/'.$bundle['name'].'/'.$parts[1];
-            if (!file_exists(dirname($dst))) {
-                @mkdir(dirname($dst), 0777, true);
-            }
-            $result = copy((string) $file, $dst);
-            if ($result === false) {
-                echo 'Can not copy: ', (string) $file, ' ', $dst, "\n";
-            }
-        }
-    }
-
-    private function folderRead($folder)
-    {
-        $dir = new RecursiveDirectoryIterator($folder, FilesystemIterator::SKIP_DOTS);
-        $files = new RecursiveIteratorIterator($dir);
-        $fileList = [];
-        foreach ($files as $file) {
-            $fileList[] = $file->getPathname();
-        }
-
-        return $fileList;
     }
 }

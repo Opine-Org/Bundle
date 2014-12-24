@@ -14,6 +14,8 @@ class BundleTest extends PHPUnit_Framework_TestCase
         $config = new Config($root);
         $config->cacheSet();
         $container = Container::instance($root, $config, $testContainer);
+        $container->show();
+        exit;
     }
 
     public function testSample()

@@ -3,4 +3,8 @@ services:
         class: Opine\Bundle\Model
         arguments:
             - %root%
+    bundleBuild:
+        class: Opine\Bundle\Build
+        arguments:
+            - %root%
             - @route
