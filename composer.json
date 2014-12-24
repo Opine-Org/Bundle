@@ -3,20 +3,26 @@
     "type": "library",
     "description": "Embed Opine projects withing other Opine projects",
     "keywords": [
-
+        "bundle", "plugin"
     ],
+    "minimum-stability": "dev",
     "license": "MIT",
     "authors": [
         {
-            "name": "Ryan Mahoney",
-            "email": "ryan@virtuecenter.com",
+            "name"    : "Ryan Mahoney",
+            "email"   : "ryan@virtuecenter.com",
             "homepage": "http://opine-php.org",
-            "role": "Developer"
+            "role"    : "Developer"
         }
     ],
     "require": {
-        "php": ">=5.4.0",
-        "symfony/yaml": "2.6.1"
+        "php"             : ">=5.5.0",
+        "symfony/yaml"    : "2.6.1",
+        "opine/container" : "2.0.2",
+        "opine/cache"     : "2.0.2",
+        "opine/route"     : "3.0.1",
+        "opine/config"    : "3.0.0",
+        "opine/interfaces": "1.0.0"
     },
     "autoload": {
         "psr-4": {
