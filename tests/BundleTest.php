@@ -21,14 +21,45 @@ class BundleTest extends PHPUnit_Framework_TestCase
 
     public function testBuild()
     {
-        var_dump($this->model->build());
+        $response = json_decode($this->model->build(), true);
+        $this->assertTrue(count($response) > 0);
     }
 
     public function testCacheSet()
     {
+        $this->assertTrue(1 === $this->model->cacheSet([
+            "Person" => [
+                "name" => "Person",
+                "modelService" => "personModel",
+                "root" => "/var/www/project/vendor/opine/bundle/tests/../public/../vendor/opine/person/src/Person/public",
+                "routeFiles" => [
+                    "/var/www/project/vendor/opine/bundle/tests/../public/../vendor/opine/person/src/Person/config/routes/route.yml",
+                ],
+            ],
+            "Helper" => [
+                "name" => "Helper",
+                "modelService" => "helperModel",
+                "root" => "/var/www/project/vendor/opine/bundle/tests/../public/../vendor/opine/helper/src/Helper/public",
+                "routeFiles" => [
+                    "/var/www/project/vendor/opine/bundle/tests/../public/../vendor/opine/helper/src/Helper/config/routes/route.yml",
+                ],
+            ],
+            "Manager" => [
+                "name" => "Manager",
+                "modelService" => "managerModel",
+                "root" => "/var/www/project/vendor/opine/bundle/tests/../public/../vendor/opine/semantic-cm/src/Manager/public",
+                "routeFiles" => [
+                    "/var/www/project/vendor/opine/bundle/tests/../public/../vendor/opine/semantic-cm/src/Manager/config/routes/route.yml",
+                ],
+            ],
+        ]));
+
+        $this->assertTrue(2 === $this->model->cacheSet());
     }
 
     public function testBundles()
     {
+        $response = $this->model->bundles();
+        $this->assertTrue(count($response) > 0);
     }
 }

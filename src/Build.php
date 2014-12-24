@@ -24,7 +24,9 @@
  */
 namespace Opine\Bundle;
 
-use Exception, RecursiveDirectoryIterator, RecursiveIteratorIterator, FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use FilesystemIterator;
 use Opine\Interfaces\Route as RouteInterface;
 
 class Build
@@ -48,6 +50,7 @@ class Build
             $this->layoutConfigs($bundle['name']);
             $this->route->serviceMethod($bundle['name']['modelService'].'@?build');
         }
+
         return $bundles;
     }
 
@@ -101,6 +104,7 @@ class Build
         foreach ($files as $file) {
             $fileList[] = $file->getPathname();
         }
+
         return $fileList;
     }
 }

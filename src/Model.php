@@ -37,17 +37,16 @@ class Model
         $this->cacheFile = $this->root.'/../var/cache/bundles.json';
     }
 
-    public function cacheSet($cache)
+    public function cacheSet(Array $cache = [])
     {
         if (empty($cache)) {
-            if (!file_exists($this->cacheFile)) {
-                return;
-            }
-            $this->cache = json_decode(file_get_contents($this->cacheFile), true);
+            $this->cache = $this->cacheRead();
 
-            return;
+            return 2;
         }
         $this->cache = $cache;
+
+        return 1;
     }
 
     private function cacheRead()
@@ -56,7 +55,7 @@ class Model
             return [];
         }
 
-        return (array) json_decode(file_get_contents($this->cacheFile), true);
+        return json_decode(file_get_contents($this->cacheFile), true);
     }
 
     private function cacheWrite(array &$bundles)
