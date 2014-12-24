@@ -7,6 +7,8 @@ use Opine\Container\Service as Container;
 
 class BundleTest extends PHPUnit_Framework_TestCase
 {
+    private $model;
+
     public function setup()
     {
         $root = __DIR__.'/../public';
@@ -14,17 +16,12 @@ class BundleTest extends PHPUnit_Framework_TestCase
         $config = new Config($root);
         $config->cacheSet();
         $container = Container::instance($root, $config, $testContainer);
-        $container->show();
-        exit;
-    }
-
-    public function testSample()
-    {
-        $this->assertTrue(true);
+        $this->model = $container->get('bundleModel');
     }
 
     public function testBuild()
     {
+        var_dump($this->model->build());
     }
 
     public function testCacheSet()

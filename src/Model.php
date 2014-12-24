@@ -34,7 +34,6 @@ class Model
     public function __construct($root)
     {
         $this->root = $root;
-        $this->route = $route;
         $this->cacheFile = $this->root.'/../var/cache/bundles.json';
     }
 
@@ -88,6 +87,9 @@ class Model
         }
         $bundles = [];
         foreach ($bundleRoutePaths as $path) {
+            if ($path == '') {
+                continue;
+            }
             $matches = [];
             preg_match('/\/src\/([a-zA-Z_\-]*)\/config\/routes\/[a-zA-Z_\-]*.yml$/', $path, $matches);
             $bundleName = $matches[1];
