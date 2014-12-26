@@ -46,9 +46,9 @@ class Build
     {
         $bundles = $this->model->bundles();
         foreach ($bundles as $bundle) {
-            $this->assets($bundle['name']);
-            $this->layoutConfigs($bundle['name']);
-            $this->route->serviceMethod($bundle['name']['modelService'].'@?build');
+            $this->assets($bundle);
+            $this->layoutConfigs($bundle);
+            $this->route->serviceMethod($bundle['modelService'].'@?build');
         }
 
         return $bundles;
