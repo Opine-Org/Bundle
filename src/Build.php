@@ -44,7 +44,7 @@ class Build
 
     public function build()
     {
-        $bundles = $this->model->bundles();
+        $bundles = $this->model->build();
         foreach ($bundles as $bundle) {
             $this->assets($bundle);
             $this->layoutConfigs($bundle);
