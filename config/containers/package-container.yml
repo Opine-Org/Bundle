@@ -7,5 +7,5 @@ services:
         class: Opine\Bundle\Build
         arguments:
             - %root%
-            - @bundleModel
-            - @route
+            - "@bundleModel"
+            - "@route"
