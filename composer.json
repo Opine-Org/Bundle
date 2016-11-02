@@ -1,7 +1,6 @@
 {
     "name": "opine/bundle",
     "type": "library",
-    "version": "2.0.15",
     "description": "Embed Opine projects withing other Opine projects",
     "keywords": [
         "bundle", "plugin"
